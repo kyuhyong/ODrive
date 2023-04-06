@@ -43,21 +43,21 @@ all:
 
 libfibre-linux-armhf:
 	docker run -it -v "`pwd`/fibre-cpp":/build -v /tmp/fibre-linux-armhf-build:/build/build -w /build fibre-compiler configs/linux-armhf.config
-	cp /tmp/fibre-linux-armhf-build/libfibre-*.so ../tools/odrive/pyfibre/fibre/
+	copy /tmp/fibre-linux-armhf-build/libfibre-*.so ../tools/odrive/pyfibre/fibre/
 
 libfibre-all:
 	docker run -it -v "`pwd`/fibre-cpp":/build -v /tmp/libfibre-build:/build/build -w /build fibre-compiler configs/linux-amd64.config
-	cp /tmp/libfibre-build/libfibre-linux-amd64.so ../tools/odrive/pyfibre/fibre/
+	copy /tmp/libfibre-build/libfibre-linux-amd64.so ../tools/odrive/pyfibre/fibre/
 	docker run -it -v "`pwd`/fibre-cpp":/build -v /tmp/libfibre-build:/build/build -w /build fibre-compiler configs/linux-armhf.config
-	cp /tmp/libfibre-build/libfibre-linux-armhf.so ../tools/odrive/pyfibre/fibre/
+	copy /tmp/libfibre-build/libfibre-linux-armhf.so ../tools/odrive/pyfibre/fibre/
 	docker run -it -v "`pwd`/fibre-cpp":/build -v /tmp/libfibre-build:/build/build -w /build fibre-compiler configs/linux-aarch64.config
-	cp /tmp/libfibre-build/libfibre-linux-aarch64.so ../tools/odrive/pyfibre/fibre/
+	copy /tmp/libfibre-build/libfibre-linux-aarch64.so ../tools/odrive/pyfibre/fibre/
 	docker run -it -v "`pwd`/fibre-cpp":/build -v /tmp/libfibre-build:/build/build -w /build fibre-compiler configs/macos-x86.config
-	cp /tmp/libfibre-build/libfibre-macos-x86.dylib ../tools/odrive/pyfibre/fibre/
+	copy /tmp/libfibre-build/libfibre-macos-x86.dylib ../tools/odrive/pyfibre/fibre/
 	docker run -it -v "`pwd`/fibre-cpp":/build -v /tmp/libfibre-build:/build/build -w /build fibre-compiler configs/windows-amd64.config
-	cp /tmp/libfibre-build/libfibre-windows-amd64.dll ../tools/odrive/pyfibre/fibre/
+	copy /tmp/libfibre-build/libfibre-windows-amd64.dll ../tools/odrive/pyfibre/fibre/
 	docker run -it -v "`pwd`/fibre-cpp":/build -v /tmp/libfibre-build:/build/build -w /build fibre-compiler configs/wasm.config
-	cp /tmp/libfibre-build/libfibre-wasm.* ../GUI/fibre-js/
+	copy /tmp/libfibre-build/libfibre-wasm.* ../GUI/fibre-js/
 
 clean:
 	-rm -fR .dep $(BUILD_DIR)
