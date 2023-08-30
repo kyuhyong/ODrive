@@ -30,7 +30,7 @@ ODrive odrv{};
 
 
 ConfigManager config_manager;
-
+uint16_t    error_check_count=0;
 class StatusLedController {
 public:
     void update();
@@ -216,7 +216,7 @@ bool ODrive::any_error() {
     return error_ != ODrive::ERROR_NONE
         || std::any_of(axes.begin(), axes.end(), [](Axis& axis){
             return axis.error_ != Axis::ERROR_NONE
-                || axis.motor_.error_ != Motor::ERROR_NONE
+                || axis.motor_.error_ != Motor::ERROR_NONE        //to bypass motor error
                 || axis.sensorless_estimator_.error_ != SensorlessEstimator::ERROR_NONE
                 || axis.encoder_.error_ != Encoder::ERROR_NONE
                 || axis.controller_.error_ != Controller::ERROR_NONE;
@@ -461,8 +461,16 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
             osSignalSet(axis.thread_id_, 0x0001);
         }
     }
-
-    get_gpio(odrv.config_.error_gpio_pin).write(odrv.any_error());
+    if(odrv.any_error()) {
+        //error_check_count+=1;
+        if(error_check_count++>2500) {
+            get_gpio(odrv.config_.error_gpio_pin).toggle();
+            error_check_count = 0;
+        }
+    } else {
+        get_gpio(odrv.config_.error_gpio_pin).write(0);
+    }
+    //get_gpio(odrv.config_.error_gpio_pin).write(odrv.any_error());
 }
 
 
@@ -828,8 +836,9 @@ extern "C" int main(void) {
     uart_event_queue = osMessageCreate(osMessageQ(uart_event_queue), NULL);
 
     // Create an event queue for USB
-    osMessageQDef(usb_event_queue, 7, uint32_t);
-    usb_event_queue = osMessageCreate(osMessageQ(usb_event_queue), NULL);
+    osMessageQDef(usb_event_queue, 7, uint32_t); // Declare a message queue with maximum number of messages:7
+    // Create the message queue in a thread
+    usb_event_queue = osMessageCreate(osMessageQ(usb_event_queue), NULL);   
 
     osSemaphoreDef(sem_can);
     sem_can = osSemaphoreCreate(osSemaphore(sem_can), 1);

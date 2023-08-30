@@ -96,16 +96,16 @@
 #define M1_BH_GPIO_Port GPIOC
 #define M1_CH_Pin GPIO_PIN_8
 #define M1_CH_GPIO_Port GPIOC
-#define M0_DC_CAL_Pin GPIO_PIN_9
-#define M0_DC_CAL_GPIO_Port GPIOC
+#define M0_DC_CAL_Pin GPIO_PIN_15 //GPIO_PIN_9
+#define M0_DC_CAL_GPIO_Port GPIOA //GPIOC
 #define M0_AH_Pin GPIO_PIN_8
 #define M0_AH_GPIO_Port GPIOA
 #define M0_BH_Pin GPIO_PIN_9
 #define M0_BH_GPIO_Port GPIOA
 #define M0_CH_Pin GPIO_PIN_10
 #define M0_CH_GPIO_Port GPIOA
-#define M0_ENC_Z_Pin GPIO_PIN_15
-#define M0_ENC_Z_GPIO_Port GPIOA
+#define M0_ENC_Z_Pin GPIO_PIN_9   //GPIO_PIN_15
+#define M0_ENC_Z_GPIO_Port GPIOC  //GPIOA
 #define nFAULT_Pin GPIO_PIN_2
 #define nFAULT_GPIO_Port GPIOD
 #define M1_ENC_Z_Pin GPIO_PIN_3

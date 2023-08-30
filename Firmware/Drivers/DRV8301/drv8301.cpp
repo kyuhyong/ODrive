@@ -128,7 +128,7 @@ bool Drv8301::is_ready() {
 
 Drv8301::FaultType_e Drv8301::get_error() {
     uint16_t fault1, fault2;
-
+    //return (FaultType_e)0x00;     //Bypass error check
     if (!read_reg(kRegNameStatus1, &fault1) ||
         !read_reg(kRegNameStatus2, &fault2)) {
         return (FaultType_e)0xffffffff;

@@ -27,6 +27,12 @@ public:
         }
     }
 
+    void toggle() {
+        if (port_) {
+            HAL_GPIO_TogglePin(port_, pin_mask_);
+        }
+    }
+
     bool read() {
         return port_ && (port_->IDR & pin_mask_);
     }
