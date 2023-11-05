@@ -53,7 +53,7 @@ public:
         float electrical_power_bandwidth = 20.0f; // [rad/s] filter cutoff for electrical power for spinout detection
         float spinout_electrical_power_threshold = 10.0f; // [W] electrical power threshold for spinout detection
         float spinout_mechanical_power_threshold = -10.0f; // [W] mechanical power threshold for spinout detection
-
+        //bool direction_fwd = true;
         // custom setters
         Controller* parent;
         void set_input_filter_bandwidth(float value) { input_filter_bandwidth = value; parent->update_filter_gains(); }
@@ -72,6 +72,7 @@ public:
     }
     bool control_mode_updated();
     void set_input_pos_and_steps(float pos);
+    void set_direction(bool fwd);
 
     bool select_encoder(size_t encoder_num);
 

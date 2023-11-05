@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <numeric>
 
+bool direction_fwd = true;
+
 bool Controller::apply_config() {
     config_.parent = this;
     update_filter_gains();
@@ -112,6 +114,10 @@ void Controller::set_input_pos_and_steps(float const pos) {
     }
 }
 
+void Controller::set_direction(bool dir) {
+    direction_fwd = dir;
+}
+
 bool Controller::control_mode_updated() {
     if (config_.control_mode >= CONTROL_MODE_POSITION_CONTROL) {
         std::optional<float> estimate = (config_.circular_setpoints ?
@@ -186,8 +192,14 @@ bool Controller::update() {
         } break;
         case INPUT_MODE_PASSTHROUGH: {
             pos_setpoint_ = input_pos_;
-            vel_setpoint_ = input_vel_;
+            if(direction_fwd) {
+                vel_setpoint_ = input_vel_;
+            } else {
+                vel_setpoint_ = -input_vel_;
+            }
+            //vel_setpoint_ = input_vel_;
             torque_setpoint_ = input_torque_; 
+
         } break;
         case INPUT_MODE_VEL_RAMP: {
             float max_step_size = std::abs(current_meas_period * config_.vel_ramp_rate);

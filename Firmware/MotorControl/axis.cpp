@@ -338,9 +338,20 @@ bool Axis::stop_closed_loop_control() {
 
 bool Axis::run_closed_loop_control_loop() {
     start_closed_loop_control();
+    dir_gpio_ = get_gpio(config_.dir_gpio_pin);
+    // if(dir_gpio_.read()) {
+    //     controller_.set_direction(true);
+    // } else {
+    //     controller_.set_direction(false);
+    // }
     set_step_dir_active(config_.enable_step_dir);
 
     while ((requested_state_ == AXIS_STATE_UNDEFINED) && motor_.is_armed_) {
+        if(dir_gpio_.read()) {
+            controller_.set_direction(true);
+        } else {
+            controller_.set_direction(false);
+        }
         osDelay(1);
     }
 
