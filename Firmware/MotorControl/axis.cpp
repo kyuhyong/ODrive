@@ -7,6 +7,8 @@
 #include "utils.hpp"
 #include "communication/interface_can.hpp"
 
+uint32_t restart_count = 0;
+
 Axis::Axis(int axis_num,
            uint16_t default_step_gpio_pin,
            uint16_t default_dir_gpio_pin,
@@ -133,7 +135,6 @@ void Axis::set_step_dir_active(bool active) {
         if (!step_gpio_.subscribe(true, false, step_cb_wrapper, this)) {
             odrv.misconfigured_ = true;
         }
-
         step_dir_active_ = true;
     } else {
         step_dir_active_ = false;
@@ -339,6 +340,7 @@ bool Axis::stop_closed_loop_control() {
 bool Axis::run_closed_loop_control_loop() {
     start_closed_loop_control();
     dir_gpio_ = get_gpio(config_.dir_gpio_pin);
+    step_gpio_ = get_gpio(config_.step_gpio_pin);
     // if(dir_gpio_.read()) {
     //     controller_.set_direction(true);
     // } else {
@@ -347,10 +349,16 @@ bool Axis::run_closed_loop_control_loop() {
     set_step_dir_active(config_.enable_step_dir);
 
     while ((requested_state_ == AXIS_STATE_UNDEFINED) && motor_.is_armed_) {
-        if(dir_gpio_.read()) {
-            controller_.set_direction(true);
-        } else {
-            controller_.set_direction(false);
+        if(controller_.vel_setpoint_ < 0.1f && controller_.vel_setpoint_ > -0.1f) {
+            if(dir_gpio_.read()) {
+                controller_.set_direction(true);
+            } else {
+                controller_.set_direction(false);
+            }
+        }
+        if(step_gpio_.read()) {
+            requested_state_ = AXIS_STATE_IDLE;
+            restart_count = 0;
         }
         osDelay(1);
     }
@@ -454,8 +462,14 @@ bool Axis::run_homing() {
 bool Axis::run_idle_loop() {
     last_drv_fault_ = motor_.gate_driver_.get_error();
     mechanical_brake_.engage();
-    set_step_dir_active(config_.enable_step_dir && config_.step_dir_always_on);
+    //set_step_dir_active(config_.enable_step_dir && config_.step_dir_always_on);
     while (requested_state_ == AXIS_STATE_UNDEFINED) {
+        if( config_.startup_closed_loop_control && step_gpio_.read()) {
+            if(restart_count++ > 1000) {
+                mechanical_brake_.release();
+                requested_state_ = AXIS_STATE_STARTUP_SEQUENCE;
+            }
+        }
         motor_.setup();
         osDelay(1);
     }
@@ -464,6 +478,7 @@ bool Axis::run_idle_loop() {
 
 // Infinite loop that does calibration and enters main control loop as appropriate
 void Axis::run_state_machine_loop() {
+    step_gpio_ = get_gpio(config_.step_gpio_pin);
     for (;;) {
         // Load the task chain if a specific request is pending
         if (requested_state_ != AXIS_STATE_UNDEFINED) {
