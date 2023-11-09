@@ -197,6 +197,9 @@ bool Controller::update() {
             } else {
                 vel_setpoint_ = -input_vel_;
             }
+            if(input_vel_ < 0.05f && input_vel_ > -0.05f) {
+                vel_setpoint_ = 0.0f;
+            }
             //vel_setpoint_ = input_vel_;
             torque_setpoint_ = input_torque_; 
 

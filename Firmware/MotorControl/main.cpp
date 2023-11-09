@@ -30,7 +30,7 @@ ODrive odrv{};
 
 
 ConfigManager config_manager;
-uint16_t    error_check_count=0;
+uint16_t    led_toggle_count=0;
 class StatusLedController {
 public:
     void update();
@@ -463,12 +463,19 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
     }
     if(odrv.any_error()) {
         //error_check_count+=1;
-        if(error_check_count++>2500) {
+        if(led_toggle_count++>2500) {
             get_gpio(odrv.config_.error_gpio_pin).toggle();
-            error_check_count = 0;
+            led_toggle_count = 0;
         }
     } else {
-        get_gpio(odrv.config_.error_gpio_pin).write(0);
+        if(axes[0].check_estop()) {
+            if(led_toggle_count++>1000) {
+                get_gpio(odrv.config_.error_gpio_pin).toggle();
+                led_toggle_count = 0;
+            }
+        } else {
+            get_gpio(odrv.config_.error_gpio_pin).write(0);
+        }
     }
     //get_gpio(odrv.config_.error_gpio_pin).write(odrv.any_error());
 }

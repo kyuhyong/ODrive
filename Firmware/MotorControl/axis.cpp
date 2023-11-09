@@ -8,6 +8,7 @@
 #include "communication/interface_can.hpp"
 
 uint32_t restart_count = 0;
+bool     estop_engaged = false;
 
 Axis::Axis(int axis_num,
            uint16_t default_step_gpio_pin,
@@ -359,6 +360,7 @@ bool Axis::run_closed_loop_control_loop() {
         if(step_gpio_.read()) {
             requested_state_ = AXIS_STATE_IDLE;
             restart_count = 0;
+            estop_engaged = true;
         }
         osDelay(1);
     }
@@ -464,16 +466,20 @@ bool Axis::run_idle_loop() {
     mechanical_brake_.engage();
     //set_step_dir_active(config_.enable_step_dir && config_.step_dir_always_on);
     while (requested_state_ == AXIS_STATE_UNDEFINED) {
-        if( config_.startup_closed_loop_control && step_gpio_.read()) {
+        if( config_.startup_closed_loop_control && !step_gpio_.read()) {
             if(restart_count++ > 1000) {
-                mechanical_brake_.release();
-                requested_state_ = AXIS_STATE_STARTUP_SEQUENCE;
+                estop_engaged = false;
+                requested_state_ = AXIS_STATE_CLOSED_LOOP_CONTROL;
             }
         }
         motor_.setup();
         osDelay(1);
     }
     return check_for_errors();
+}
+
+bool Axis::check_estop() {
+    return estop_engaged;
 }
 
 // Infinite loop that does calibration and enters main control loop as appropriate
