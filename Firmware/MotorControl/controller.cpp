@@ -192,14 +192,18 @@ bool Controller::update() {
         } break;
         case INPUT_MODE_PASSTHROUGH: {
             pos_setpoint_ = input_pos_;
+            //---------------------------------------------------------------------------------------------------------
+            // Apply direction setby gpio read
             if(direction_fwd) {
-                vel_setpoint_ = input_vel_;
+                vel_setpoint_ = input_vel_ * config_.vel_direction; //Added direction change
             } else {
-                vel_setpoint_ = -input_vel_;
+                vel_setpoint_ = -input_vel_ * config_.vel_direction; //Added direction change
             }
+            // Filter out velocity input near zero
             if(input_vel_ < 0.05f && input_vel_ > -0.05f) {
                 vel_setpoint_ = 0.0f;
             }
+            //---------------------------------------------------------------------------------------------------------
             //vel_setpoint_ = input_vel_;
             torque_setpoint_ = input_torque_; 
 

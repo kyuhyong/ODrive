@@ -159,7 +159,7 @@ public:
     bool run_closed_loop_control_loop();
     bool run_homing();
     bool run_idle_loop();
-    bool check_estop();
+    bool check_estop();     // Added to check estop gpio ------------------------------------------------------------------------//
 
     constexpr uint32_t get_watchdog_reset() {
         return static_cast<uint32_t>(std::clamp<float>(config_.watchdog_timeout, 0, UINT32_MAX / (current_meas_hz + 1)) * current_meas_hz);

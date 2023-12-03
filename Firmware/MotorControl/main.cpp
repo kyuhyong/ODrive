@@ -461,6 +461,8 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
             osSignalSet(axis.thread_id_, 0x0001);
         }
     }
+    //-----------------------------------------------------------------------------------------------------------------------------------------
+    // Added to utilize driver status led
     if(odrv.any_error()) {
         //error_check_count+=1;
         if(led_toggle_count++>2500) {
@@ -477,7 +479,7 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
             get_gpio(odrv.config_.error_gpio_pin).write(0);
         }
     }
-    //get_gpio(odrv.config_.error_gpio_pin).write(odrv.any_error());
+    //-----------------------------------------------------------------------------------------------------------------------------------------/
 }
 
 
@@ -568,6 +570,8 @@ static void rtos_main(void*) {
     for(auto& axis: axes){
         axis.acim_estimator_.idq_src_.connect_to(&axis.motor_.Idq_setpoint_);
     }
+
+    //axes[0].controller_.config_.vel_direction = -1;     //This line is added for testing ------------------------------------------------------/
 
     // Start PWM and enable adc interrupts/callbacks
     start_adc_pwm();

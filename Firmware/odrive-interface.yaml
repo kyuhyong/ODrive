@@ -1105,6 +1105,10 @@ interfaces:
           vel_ramp_rate: 
             type: float32
             unit: turn/s^2
+          vel_direction:
+            type: int32
+            unit: +1 or -1
+            doc: Driection of velocity command (default is 1)
           torque_ramp_rate:
             type: float32
             unit: N·m / sec
