@@ -3,7 +3,8 @@
 #include <algorithm>
 #include <numeric>
 
-bool direction_fwd = true;
+
+volatile bool direction_fwd = true;     //To set direction +/- for cart
 
 bool Controller::apply_config() {
     config_.parent = this;
@@ -195,12 +196,12 @@ bool Controller::update() {
             //---------------------------------------------------------------------------------------------------------
             // Apply direction setby gpio read
             if(direction_fwd) {
-                vel_setpoint_ = input_vel_ * config_.vel_direction; //Added direction change
+                vel_setpoint_ = input_vel_;// * config_.vel_direction; //Added direction change
             } else {
-                vel_setpoint_ = -input_vel_ * config_.vel_direction; //Added direction change
+                vel_setpoint_ = -input_vel_;// * config_.vel_direction; //Added direction change
             }
             // Filter out velocity input near zero
-            if(input_vel_ < 0.05f && input_vel_ > -0.05f) {
+            if(input_vel_ < 0.1f && input_vel_ > -0.1f) {
                 vel_setpoint_ = 0.0f;
             }
             //---------------------------------------------------------------------------------------------------------

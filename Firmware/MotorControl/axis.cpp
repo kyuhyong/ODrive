@@ -7,8 +7,8 @@
 #include "utils.hpp"
 #include "communication/interface_can.hpp"
 
-uint32_t restart_count = 0;
-bool     estop_engaged = false;
+volatile uint32_t restart_count = 0;
+volatile bool     estop_engaged[2] = {false,false};
 
 Axis::Axis(int axis_num,
            uint16_t default_step_gpio_pin,
@@ -342,31 +342,36 @@ bool Axis::run_closed_loop_control_loop() {
     start_closed_loop_control();
     dir_gpio_ = get_gpio(config_.dir_gpio_pin);
     step_gpio_ = get_gpio(config_.step_gpio_pin);
-    set_step_dir_active(config_.enable_step_dir);
+    //set_step_dir_active(config_.enable_step_dir);
 
     while ((requested_state_ == AXIS_STATE_UNDEFINED) && motor_.is_armed_) {
-        if(controller_.vel_setpoint_ < 0.1f && controller_.vel_setpoint_ > -0.1f) {
-            //------------------------------------------------------------------------------------------------------------------------------------
-            // Read DIR GPIO pin to change direction (TODO: buggy if gpio pins not pulled strongly)
-            if(dir_gpio_.read()) {
-                controller_.set_direction(true);
-            } else {
-                controller_.set_direction(false);
+        if(axis_num_ == 0) {    //Only change axis 0
+            if(controller_.vel_setpoint_ < 0.01f && controller_.vel_setpoint_ > -0.01f) {
+                //------------------------------------------------------------------------------------------------------------------------------------
+                // Read DIR GPIO pin to change direction (TODO: buggy if gpio pins not pulled strongly)
+                if(dir_gpio_.read()) {
+                    controller_.set_direction(true);
+                } else {
+                    controller_.set_direction(false);
+                }
+                //------------------------------------------------------------------------------------------------------------------------------------
             }
-            //------------------------------------------------------------------------------------------------------------------------------------
         }
         //----------------------------------------------------------------------------------------------------------------------------------------
-        // Read STEP GPIO pin to act as E-stop
-        if(step_gpio_.read()) {
+        if(estop_engaged[axis_num_]) {
             requested_state_ = AXIS_STATE_IDLE;
+        }
+        // Read STEP GPIO pin to act as E-stop
+        if(!step_gpio_.read()) {
             restart_count = 0;
-            estop_engaged = true;
+            estop_engaged[0] = true;
+            estop_engaged[1] = true;
         }
         //-----------------------------------------------------------------------------------------------------------------------------------------
         osDelay(1);
     }
 
-    set_step_dir_active(config_.enable_step_dir && config_.step_dir_always_on);
+    //set_step_dir_active(config_.enable_step_dir && config_.step_dir_always_on);
     stop_closed_loop_control();
 
     return check_for_errors();
@@ -469,11 +474,14 @@ bool Axis::run_idle_loop() {
     while (requested_state_ == AXIS_STATE_UNDEFINED) {
         //---------------------------------------------------------------------------------------------------------------------------------
         // Added to regain control when E-stop is released
-        if( config_.startup_closed_loop_control && !step_gpio_.read()) {
+        if(axis_num_ == 0 && step_gpio_.read()) {
             if(restart_count++ > 1000) {
-                estop_engaged = false;
-                requested_state_ = AXIS_STATE_CLOSED_LOOP_CONTROL;
+                estop_engaged[0] = false;
+                estop_engaged[1] = false;
             }
+        }
+        if(!estop_engaged[axis_num_] && config_.startup_closed_loop_control) {
+            requested_state_ = AXIS_STATE_CLOSED_LOOP_CONTROL;
         }
         //---------------------------------------------------------------------------------------------------------------------------------
         motor_.setup();
@@ -485,7 +493,7 @@ bool Axis::run_idle_loop() {
 //-----------------------------------------------------------------------------------------------------------------------------------------
 // Added to check estop gpio
 bool Axis::check_estop() {
-    return estop_engaged;
+    return estop_engaged[0];
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
 // Infinite loop that does calibration and enters main control loop as appropriate
