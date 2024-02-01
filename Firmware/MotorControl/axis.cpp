@@ -362,7 +362,7 @@ bool Axis::run_closed_loop_control_loop() {
             requested_state_ = AXIS_STATE_IDLE;
         }
         // Read STEP GPIO pin to act as E-stop
-        if(!step_gpio_.read()) {
+        if(!step_gpio_.read()) { //changed
             restart_count = 0;
             estop_engaged[0] = true;
             estop_engaged[1] = true;
